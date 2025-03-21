@@ -15,8 +15,6 @@
 template <Numeric T> class Tensor: public Shapeable {
     template <Numeric> friend class Tensor;
 
-    using Shapeable::shape;
-
     private:
         T* data = nullptr;
         int* stride = nullptr;

@@ -12,10 +12,6 @@ Shapeable::Shapeable(Shape shape) {
     sh = shape;
 }
 
-Shapeable::Shapeable(Shape&& shape) {
-    sh = shape;
-}
-
 int Shapeable::ndim() const {
     return sh.ndim();
 }

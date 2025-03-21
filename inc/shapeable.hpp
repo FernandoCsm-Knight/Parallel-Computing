@@ -15,8 +15,6 @@ class Shapeable {
 
         Shapeable(Shape shape);
 
-        Shapeable(Shape&& shape);
-
         // Destructor
 
         virtual ~Shapeable() = default;

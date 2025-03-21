@@ -8,28 +8,55 @@
 template <Numeric T>
 template <Integral... Dims>
 Tensor<T>::Tensor(Dims... dims): Shapeable(dims...) {
-    stride = new int[this->ndim()];
-
-    data = new T[length()]();
-    stride[this->ndim() - 1] = 1;
-    for(int i = this->ndim() - 2; i >= 0; --i) {
-        stride[i] = stride[i + 1] * this->shape(i + 1);
+    stride = nullptr;
+    data = nullptr;
+    
+    if (this->ndim() > 0) {
+        stride = new int[this->ndim()];
+        
+        if (length() > 0) {
+            data = new T[length()]();
+            
+            stride[this->ndim() - 1] = 1;
+            for(int i = this->ndim() - 2; i >= 0; --i) {
+                stride[i] = stride[i + 1] * this->shape(i + 1);
+            }
+        } else {
+            data = new T[1]();
+        }
+    } else {
+        data = new T[1]();
+        stride = new int[1]();
     }
 }
 
 template <Numeric T>
 Tensor<T>::Tensor(Shape shape): Shapeable(shape) {
-    stride = new int[this->ndim()];
-
-    data = new T[length()]();
-    stride[this->ndim() - 1] = 1;
-    for(int i = this->ndim() - 2; i >= 0; --i) {
-        stride[i] = stride[i + 1] * this->shape(i + 1);
+    stride = nullptr;
+    data = nullptr;
+    
+    if (this->ndim() > 0) {
+        stride = new int[this->ndim()];
+        
+        if (length() > 0) {
+            data = new T[length()]();
+            
+            stride[this->ndim() - 1] = 1;
+            for(int i = this->ndim() - 2; i >= 0; --i) {
+                stride[i] = stride[i + 1] * this->shape(i + 1);
+            }
+        } else {
+            data = new T[1]();
+        }
+    } else {
+        data = new T[1]();
+        stride = new int[1]();
     }
 }
 
 template <Numeric T>
-Tensor<T>::Tensor(const Tensor<T>& other): Shapeable(other.shape()) { 
+Tensor<T>::Tensor(const Tensor<T>& other) { 
+    this->sh = other.shape();
     data = new T[length()]();
     stride = new int[this->ndim()];
 
@@ -73,6 +100,8 @@ template <Numeric T>
 Tensor<T>::~Tensor() {
     delete[] data;
     delete[] stride;
+    data = nullptr;
+    stride = nullptr;
 }
 
 // Assingment operators
@@ -111,7 +140,6 @@ Tensor<T>& Tensor<T>::operator=(Tensor<T>&& other) noexcept {
         
         other.data = nullptr;
         other.stride = nullptr;
-        other.size = 0;
     }
 
     return *this;
