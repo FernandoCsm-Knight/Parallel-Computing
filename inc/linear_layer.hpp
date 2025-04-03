@@ -9,20 +9,19 @@ class LinearLayer {
     private:
         int in_features;
         int out_features;
-        bool use_bias;
+        float learning_rate;
+        Tensor<T> last_input;
+        Tensor<T> last_output;
         Tensor<T> weights;
         Tensor<T> bias;
 
     public:
-        LinearLayer(int in_features, int out_features, bool bias = true);
+        LinearLayer(int in_features, int out_features, float lr);
 
         Tensor<T> forward(const Tensor<T>& input);
 
-        void update_parameters(T learning_rate, const Tensor<T>& grad_weights, const Tensor<T>& grad_bias);
+        Tensor<T> backward(const Tensor<T>& grad_weights);
 
-        const Tensor<T>& get_weights() const;
-
-        const Tensor<T>& get_bias() const;
 };
 
 #include "../src/linear_layer.tpp"

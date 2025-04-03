@@ -63,28 +63,40 @@ template <Numeric T> class Tensor: public Shapeable {
         // Operators
 
         template <Numeric U>
-        Tensor<std::common_type_t<T, U>> operator+(const Tensor<U>& other);
+        Tensor<std::common_type_t<T, U>> operator+(const Tensor<U>& other) const;
 
         template <Numeric U>
-        Tensor<std::common_type_t<T, U>> operator+(const U& scalar);
+        Tensor<std::common_type_t<T, U>> operator+(const U& scalar) const;
 
         template <Numeric U>
-        Tensor<std::common_reference_t<T, U>> operator-(const Tensor<U>& other);
+        Tensor<std::common_type_t<T, U>> operator-(const Tensor<U>& other) const;
 
         template <Numeric U>
-        Tensor<std::common_reference_t<T, U>> operator-(const U& scalar);
+        Tensor<std::common_type_t<T, U>> operator-(const U& scalar) const;
 
         template <Numeric U>
-        Tensor<std::common_reference_t<T, U>> operator*(const Tensor<U>& other);
+        Tensor<std::common_type_t<T, U>> operator*(const Tensor<U>& other) const;
 
         template <Numeric U>
-        Tensor<std::common_type_t<T, U>> operator*(const U& scalar);
+        Tensor<std::common_type_t<T, U>> operator*(const U& scalar) const;
 
         template <Numeric U>
-        Tensor<std::common_reference_t<T, U>> operator/(const Tensor<U>& other);
+        Tensor<std::common_type_t<T, U>> operator/(const Tensor<U>& other) const;
 
         template <Numeric U>
-        Tensor<std::common_type_t<T, U>> operator/(const U& scalar);
+        Tensor<std::common_type_t<T, U>> operator/(const U& scalar) const;
+
+        template <Numeric U>
+        Tensor<T>& operator+=(const Tensor<U>& other);
+
+        template <Numeric U>
+        Tensor<T>& operator+=(const U& scalar);
+
+        template <Numeric U>
+        Tensor<T>& operator-=(const Tensor<U>& other);
+
+        template <Numeric U>
+        Tensor<T>& operator-=(const U& scalar);
 
         // Accessors
 
@@ -104,7 +116,7 @@ template <Numeric T> class Tensor: public Shapeable {
 
         T min() const;
         T max() const;
-        T sum() const;
+        Tensor<T> sum(int axis = -1, bool keep_dimension = false) const;
         T mean() const;
         T var() const;
         T std() const;
@@ -149,15 +161,19 @@ template <Numeric T> class Tensor: public Shapeable {
     
                     os << tensor.data[i];
                 
-    
+                    bool end_line = false;
                     for(int j = 0;  j < tensor.ndim() - 1; ++j) {
                         if((i + 1) % tensor.stride[j] == 0) {
                             os << "]";
+                            end_line = true;
                         }
                     }
                     
                     if (i < tensor.length() - 1) {
                         os << ", ";
+                        if(end_line) {
+                            os << std::endl;
+                        }
                     }
                 }
                 os << "]" << std::endl;

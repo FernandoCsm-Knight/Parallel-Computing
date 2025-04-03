@@ -2,82 +2,90 @@
 #define LINEARLAYER_TPP
 
 #include "../inc/linear_layer.hpp"
+#include "../inc/tensorlib.hpp"
+
 #include <random>
 
 template <Numeric T>
-LinearLayer<T>::LinearLayer(int in_features, int out_features, bool bias)
-    : in_features(in_features), out_features(out_features), use_bias(bias) {
+Tensor<T> relu(const Tensor<T>& input) {
+    Tensor<T> result(input.shape());
+
+    for(size_t i = 0; i < input.length(); ++i) {
+        result[i] = std::max(static_cast<T>(0), input[i]);
+    }
+
+    return result;
+}
+
+template <Numeric T>
+Tensor<T> relu_derivative(const Tensor<T>& input) {
+    Tensor<T> result(input.shape());
+
+    for(size_t i = 0; i < input.length(); ++i) {
+        result[i] = (input[i] > static_cast<T>(0)) ? static_cast<T>(1) : static_cast<T>(0);
+    }
+
+    return result;
+}
+
+template <Numeric T>
+LinearLayer<T>::LinearLayer(int in_features, int out_features, float lr)
+    : in_features(in_features), out_features(out_features), learning_rate(lr) {
     
-    // Initialize weights using He initialization
     std::random_device rd;
     std::mt19937 gen(rd());
     std::normal_distribution<T> dist(0, std::sqrt(2.0 / in_features));
     
-    // Create weight tensor
     weights = Tensor<T>(in_features, out_features);
     
-    // Initialize weights with random values
     for (size_t i = 0; i < weights.length(); ++i) {
         weights[i] = dist(gen);
     }
-    
-    // Create and initialize bias if needed
-    if (use_bias) {
-        this->bias = Tensor<T>(out_features);
-        // Initialize bias with zeros
-        for (size_t i = 0; i < this->bias.length(); ++i) {
-            this->bias[i] = 0.0;
-        }
-    }
+
+    bias = tensor::ones<T>(out_features);
 }
 
 template <Numeric T>
 Tensor<T> LinearLayer<T>::forward(const Tensor<T>& input) {
-    // Check input dimensions
     if (input.shape(input.ndim() - 1) != in_features) {
         throw std::invalid_argument("Input features don't match layer's in_features");
     }
     
-    // Linear transformation: y = xW + b
-    Tensor<T> output = input.dot(weights);
+    this->last_input = input;
     
-    // Add bias if needed
-    if (use_bias) {
-        // Broadcast and add bias to each output
-        for (size_t i = 0; i < output.length(); ++i) {
-            output[i] += bias[i % bias.length()];
+    // Get the dot product result
+    Tensor<T> dot_result = input.dot(weights);
+    
+    // Create a broadcasting-compatible version of bias
+    // The bias should be added to each row of the dot result
+    Tensor<T> broadcast_bias(dot_result.shape());
+    
+    // Copy the bias values to each row of the result
+    for(int i = 0; i < dot_result.shape(0); ++i) {
+        for(int j = 0; j < dot_result.shape(1); ++j) {
+            broadcast_bias(i, j) = bias[j];
         }
     }
     
-    return output;
-}
-
-template <Numeric T>
-void LinearLayer<T>::update_parameters(T learning_rate, const Tensor<T>& grad_weights, const Tensor<T>& grad_bias) {
-    // Update weights: w = w - lr * grad_w
-    for (size_t i = 0; i < weights.length(); ++i) {
-        weights[i] -= learning_rate * grad_weights[i];
-    }
+    // Now add with matching shapes
+    this->last_output = relu(dot_result + broadcast_bias);
     
-    // Update bias if used
-    if (use_bias) {
-        for (size_t i = 0; i < bias.length(); ++i) {
-            bias[i] -= learning_rate * grad_bias[i];
-        }
-    }
+    return this->last_output;
 }
 
 template <Numeric T>
-const Tensor<T>& LinearLayer<T>::get_weights() const {
-    return weights;
-}
+Tensor<T> LinearLayer<T>::backward(const Tensor<T>& grad_weights) {
+    // if (grad_weights.shape(0) != out_features || grad_weights.shape(1) != in_features) {
+    //     throw std::invalid_argument("Gradient shape doesn't match layer's weights shape");
+    // }
+    
+    Tensor<T> delta = grad_weights * relu_derivative(last_output);
+    Tensor<T> previous_grad = delta.dot(weights.transpose());
 
-template <Numeric T>
-const Tensor<T>& LinearLayer<T>::get_bias() const {
-    if (!use_bias) {
-        throw std::runtime_error("This layer does not use bias");
-    }
-    return bias;
+    weights -= (last_input.transpose().dot(delta) * learning_rate);
+    bias -= (delta.sum(0, true) * learning_rate);
+
+    return previous_grad;
 }
 
 #endif

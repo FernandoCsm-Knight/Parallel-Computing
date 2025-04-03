@@ -7,15 +7,24 @@
 
 template <Integral... Dims>
 Shape::Shape(Dims... dims) {
-    len = 1;
-    dimensions = sizeof...(dims);
-
-    if(dimensions == 0) {
-        buff = nullptr;
-    } else {
-        buff = new int[dimensions]{ static_cast<int>(dims)... };
+    const int dims_array[] = {static_cast<int>(dims)...};
+    const int num_dims = sizeof...(dims);
     
+    len = 1;
+
+    if(num_dims > 1 && dims_array[0] == 0) {
+        throw std::invalid_argument("First dimension cannot be zero if there are multiple dimensions");
+    } 
+
+    if(num_dims == 0 || (num_dims > 0 && dims_array[0] == 0)) {
+        dimensions = 0;
+        buff = new int[1]{ 0 };
+    } else {
+        dimensions = num_dims;
+        buff = new int[dimensions];
+        
         for(int i = 0; i < dimensions; ++i) {
+            buff[i] = dims_array[i];
             len *= buff[i];
         }
     }

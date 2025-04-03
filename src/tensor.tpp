@@ -10,8 +10,11 @@ template <Integral... Dims>
 Tensor<T>::Tensor(Dims... dims): Shapeable(dims...) {
     stride = nullptr;
     data = nullptr;
-    
-    if (this->ndim() > 0) {
+
+    if(this->shape(0) == 0) {
+        data = new T[1]();
+        stride = new int[1]();
+    } else if(this->ndim() > 0) {
         stride = new int[this->ndim()];
         
         if (length() > 0) {
@@ -24,10 +27,7 @@ Tensor<T>::Tensor(Dims... dims): Shapeable(dims...) {
         } else {
             data = new T[1]();
         }
-    } else {
-        data = new T[1]();
-        stride = new int[1]();
-    }
+    } 
 }
 
 template <Numeric T>
@@ -211,7 +211,7 @@ Tensor<std::common_type_t<T, U>> Tensor<T>::create_with_scalar(
 
 template <Numeric T>
 template <Numeric U>
-Tensor<std::common_type_t<T, U>> Tensor<T>::operator+(const Tensor<U>& other) {
+Tensor<std::common_type_t<T, U>> Tensor<T>::operator+(const Tensor<U>& other) const {
     if(other.is_scalar()) {
         return this->operator+(other.value());
     }
@@ -225,7 +225,7 @@ Tensor<std::common_type_t<T, U>> Tensor<T>::operator+(const Tensor<U>& other) {
 
 template <Numeric T>
 template <Numeric U>
-Tensor<std::common_type_t<T, U>> Tensor<T>::operator+(const U& scalar) {
+Tensor<std::common_type_t<T, U>> Tensor<T>::operator+(const U& scalar) const {
     return create_with_scalar(scalar, std::function<void(std::common_type_t<T, U>&, const T&, const U&)>(
         [](std::common_type_t<T, U>& result, const T& a, const U& b) { 
             result = a + b; 
@@ -235,7 +235,7 @@ Tensor<std::common_type_t<T, U>> Tensor<T>::operator+(const U& scalar) {
 
 template <Numeric T>
 template <Numeric U>
-Tensor<std::common_reference_t<T, U>> Tensor<T>::operator-(const Tensor<U>& other) {
+Tensor<std::common_type_t<T, U>> Tensor<T>::operator-(const Tensor<U>& other) const {
     if(other.is_scalar()) {
         return this->operator-(other.value());
     }
@@ -249,7 +249,7 @@ Tensor<std::common_reference_t<T, U>> Tensor<T>::operator-(const Tensor<U>& othe
 
 template <Numeric T>
 template <Numeric U>
-Tensor<std::common_reference_t<T, U>> Tensor<T>::operator-(const U& scalar) {
+Tensor<std::common_type_t<T, U>> Tensor<T>::operator-(const U& scalar) const {
     return create_with_scalar(scalar, std::function<void(std::common_type_t<T, U>&, const T&, const U&)>(
         [](std::common_type_t<T, U>& result, const T& a, const U& b) { 
             result = a - b; 
@@ -259,7 +259,7 @@ Tensor<std::common_reference_t<T, U>> Tensor<T>::operator-(const U& scalar) {
 
 template <Numeric T>
 template <Numeric U>
-Tensor<std::common_reference_t<T, U>> Tensor<T>::operator*(const Tensor<U>& other) {
+Tensor<std::common_type_t<T, U>> Tensor<T>::operator*(const Tensor<U>& other) const {
     if(other.is_scalar()) {
         return this->operator*(other.value());
     }
@@ -273,7 +273,7 @@ Tensor<std::common_reference_t<T, U>> Tensor<T>::operator*(const Tensor<U>& othe
 
 template <Numeric T>
 template <Numeric U>
-Tensor<std::common_type_t<T, U>> Tensor<T>::operator*(const U& scalar) {
+Tensor<std::common_type_t<T, U>> Tensor<T>::operator*(const U& scalar) const {
     return create_with_scalar(scalar, std::function<void(std::common_type_t<T, U>&, const T&, const U&)>(
         [](std::common_type_t<T, U>& result, const T& a, const U& b) { 
             result = a * b; 
@@ -283,7 +283,7 @@ Tensor<std::common_type_t<T, U>> Tensor<T>::operator*(const U& scalar) {
 
 template <Numeric T>
 template <Numeric U>
-Tensor<std::common_reference_t<T, U>> Tensor<T>::operator/(const Tensor<U>& other) {
+Tensor<std::common_type_t<T, U>> Tensor<T>::operator/(const Tensor<U>& other) const {
     if(other.is_scalar()) {
         return this->operator/(other.value());
     }
@@ -297,13 +297,69 @@ Tensor<std::common_reference_t<T, U>> Tensor<T>::operator/(const Tensor<U>& othe
 
 template <Numeric T>
 template <Numeric U>
-Tensor<std::common_type_t<T, U>> Tensor<T>::operator/(const U& scalar) {
+Tensor<std::common_type_t<T, U>> Tensor<T>::operator/(const U& scalar) const {
     return create_with_scalar(scalar, std::function<void(std::common_type_t<T, U>&, const T&, const U&)>(
         [](std::common_type_t<T, U>& result, const T& a, const U& b) { 
             result = a / b; 
         }
     ));
 }
+
+template <Numeric T>
+template <Numeric U>
+Tensor<T>& Tensor<T>::operator+=(const Tensor<U>& other) {
+    if(other.is_scalar()) {
+        for(size_t i = 0; i < length(); ++i) {
+            data[i] += other.value();
+        }
+    } else {
+        for(size_t i = 0; i < length(); ++i) {
+            data[i] += static_cast<T>(other.data[i]);
+        }
+    }
+
+    return *this;
+}
+
+template <Numeric T>
+template <Numeric U>
+Tensor<T>& Tensor<T>::operator-=(const Tensor<U>& other) {
+    if(other.is_scalar()) {
+        for(size_t i = 0; i < length(); ++i) {
+            data[i] -= other.value();
+        }
+    } else {
+        for(size_t i = 0; i < length(); ++i) {
+            data[i] -= static_cast<T>(other.data[i]);
+        }
+    }
+
+    return *this;
+}
+
+template <Numeric T>
+template <Numeric U>
+Tensor<T>& Tensor<T>::operator+=(const U& scalar) {
+    for(size_t i = 0; i < length(); ++i) {
+        data[i] += scalar;
+    }
+
+    return *this;
+}
+
+template <Numeric T>
+template <Numeric U>
+Tensor<T>& Tensor<T>::operator-=(const U& scalar) {
+    for(size_t i = 0; i < length(); ++i) {
+        data[i] -= scalar;
+    }
+
+    return *this;
+}
+
+
+
+
 
 // Accessors
 
@@ -450,13 +506,80 @@ T Tensor<T>::max() const {
 }
 
 template <Numeric T>
-T Tensor<T>::sum() const {
-    T sum = 0;
-    for(size_t i = 0; i < length(); ++i) {
-        sum += data[i];
-    }
+Tensor<T> Tensor<T>::sum(int axis, bool keep_dimension) const {
+    Tensor<T> result;
 
-    return sum;
+    if (axis == -1) {
+        if (keep_dimension) {
+            Shape result_shape;
+            for (int i = 0; i < ndim(); ++i) {
+                result_shape.add_dimension(1);
+            }
+            
+            result = Tensor<T>(result_shape);
+            T total = 0;
+            
+            for (size_t i = 0; i < length(); ++i) {
+                total += data[i];
+            }
+            
+            result[0] = total;
+        } else {
+            result = Tensor<T>(Shape());
+            T total = 0;
+            
+            for (size_t i = 0; i < length(); ++i) {
+                total += data[i];
+            }
+            
+            result.value() = total;
+        }
+    } else {        
+        if (axis < 0 || axis >= ndim()) {
+            throw std::invalid_argument("Invalid axis value for sum operation");
+        }
+        
+        Shape result_shape;
+        for (int i = 0; i < ndim(); ++i) {
+            if (i == axis) {
+                if (keep_dimension) result_shape.add_dimension(1);
+            } else {
+                result_shape.add_dimension(shape()[i]);
+            }
+        }
+        
+        result = Tensor<T>(result_shape);
+        
+        int axis_stride = 1;
+        for (int i = ndim() - 1; i > axis; --i) {
+            axis_stride *= shape()[i];
+        }
+    
+        int axis_size = shape()[axis];
+        int outer_block_size = 1;
+        for (int i = 0; i < axis; ++i) {
+            outer_block_size *= shape()[i];
+        }
+        
+        for (size_t i = 0; i < result.length(); ++i) {
+            result[i] = 0;
+        }
+        
+        for (int outer = 0; outer < outer_block_size; ++outer) {
+            for (int inner = 0; inner < axis_stride; ++inner) {
+                size_t result_idx = (keep_dimension) ?
+                    outer * axis_stride * (result_shape[axis]) + inner :
+                    outer * axis_stride + inner;
+                
+                for (int a = 0; a < axis_size; ++a) {
+                    size_t src_idx = outer * axis_size * axis_stride + a * axis_stride + inner;
+                    result[result_idx] += data[src_idx];
+                }
+            }
+        }
+    }
+    
+    return result;
 }
 
 template <Numeric T>
