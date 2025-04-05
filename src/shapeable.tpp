@@ -12,6 +12,14 @@ Shapeable::Shapeable(Shape shape) {
     sh = shape;
 }
 
+Shapeable::Shapeable(const Shapeable& other) {
+    sh = other.sh;
+}
+
+Shapeable::Shapeable(Shapeable&& other) noexcept {
+    sh = std::move(other.sh);
+}
+
 int Shapeable::ndim() const {
     return sh.ndim();
 }
@@ -30,6 +38,10 @@ Shape Shapeable::shape() const {
 
 int Shapeable::shape(int i) const {
     return sh[i];
+}
+
+bool Shapeable::can_broadcast(const Shapeable& other) const {
+    return sh.can_broadcast(other.sh);
 }
 
 #endif

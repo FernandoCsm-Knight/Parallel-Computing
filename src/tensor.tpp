@@ -8,54 +8,32 @@
 template <Numeric T>
 template <Integral... Dims>
 Tensor<T>::Tensor(Dims... dims): Shapeable(dims...) {
-    stride = nullptr;
-    data = nullptr;
+    data = new T[length()]();
+    stride = new int[this->ndim()];
 
-    if(this->shape(0) == 0) {
-        data = new T[1]();
-        stride = new int[1]();
-    } else if(this->ndim() > 0) {
-        stride = new int[this->ndim()];
-        
-        if (length() > 0) {
-            data = new T[length()]();
-            
-            stride[this->ndim() - 1] = 1;
-            for(int i = this->ndim() - 2; i >= 0; --i) {
-                stride[i] = stride[i + 1] * this->shape(i + 1);
-            }
-        } else {
-            data = new T[1]();
+    if(this->ndim() != 0) {
+        stride[this->ndim() - 1] = 1;
+        for(int i = this->ndim() - 2; i >= 0; --i) {
+            stride[i] = stride[i + 1] * this->shape(i + 1);
         }
     } 
 }
 
 template <Numeric T>
 Tensor<T>::Tensor(Shape shape): Shapeable(shape) {
-    stride = nullptr;
-    data = nullptr;
+    data = new T[length()]();
+    stride = new int[this->ndim()];
     
-    if (this->ndim() > 0) {
-        stride = new int[this->ndim()];
-        
-        if (length() > 0) {
-            data = new T[length()]();
-            
-            stride[this->ndim() - 1] = 1;
-            for(int i = this->ndim() - 2; i >= 0; --i) {
-                stride[i] = stride[i + 1] * this->shape(i + 1);
-            }
-        } else {
-            data = new T[1]();
+    if(this->ndim() != 0) {
+        stride[this->ndim() - 1] = 1;
+        for(int i = this->ndim() - 2; i >= 0; --i) {
+            stride[i] = stride[i + 1] * this->shape(i + 1);
         }
-    } else {
-        data = new T[1]();
-        stride = new int[1]();
-    }
+    } 
 }
 
 template <Numeric T>
-Tensor<T>::Tensor(const Tensor<T>& other) { 
+Tensor<T>::Tensor(const Tensor<T>& other): Shapeable(other) { 
     this->sh = other.shape();
     data = new T[length()]();
     stride = new int[this->ndim()];
@@ -70,8 +48,7 @@ Tensor<T>::Tensor(const Tensor<T>& other) {
 }
 
 template <Numeric T>
-Tensor<T>::Tensor(Tensor<T>&& other) noexcept {
-    this->sh = std::move(other.sh);
+Tensor<T>::Tensor(Tensor<T>&& other) noexcept: Shapeable(std::move(other)) {
     data = other.data;
     stride = other.stride;
 
@@ -81,7 +58,7 @@ Tensor<T>::Tensor(Tensor<T>&& other) noexcept {
 
 template <Numeric T>
 template <Numeric U>
-Tensor<T>::Tensor(const Tensor<U>& other): Shapeable(other.shape()) { 
+Tensor<T>::Tensor(const Tensor<U>& other): Shapeable(other) { 
     data = new T[length()]();
     stride = new int[this->ndim()];
 

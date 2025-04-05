@@ -15,17 +15,23 @@ class Shapeable {
 
         Shapeable(Shape shape);
 
+        Shapeable(const Shapeable& other);
+
+        Shapeable(Shapeable&& other) noexcept;
+
         // Destructor
 
         virtual ~Shapeable() = default;
 
         // Accessors
 
-        inline virtual int ndim() const;
-        inline virtual size_t length() const;
-        inline virtual bool is_scalar() const;
-        inline virtual Shape shape() const;
-        inline virtual int shape(int i) const;
+        inline int ndim() const;
+        inline size_t length() const;
+        inline bool is_scalar() const;
+        inline Shape shape() const;
+        inline int shape(int i) const;
+
+        bool can_broadcast(const Shapeable& other) const;
 };
 
 #include "../src/shapeable.tpp"
