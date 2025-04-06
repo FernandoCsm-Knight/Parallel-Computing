@@ -3,7 +3,6 @@
 
 #include <initializer_list>
 #include <iostream>
-#include <vector>
 
 #include "numeric.hpp"
 

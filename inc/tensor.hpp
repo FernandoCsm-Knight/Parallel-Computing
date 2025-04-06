@@ -2,9 +2,10 @@
 #define TENSOR_HPP
 
 #include <iostream>
-#include <type_traits>
 #include <functional>
+#include <type_traits>
 #include <sstream>
+#include <vector>
 #include <stdexcept>
 #include <cmath>
 
@@ -21,17 +22,31 @@ template <Numeric T> class Tensor: public Shapeable {
 
         // Private methods
 
+        size_t get_broadcast_index(size_t i, const std::vector<size_t>& other_shape, const std::vector<size_t>& other_stride) const;
+
         template <Numeric U>
-        Tensor<std::common_type_t<T, U>> create_with_tensor(
-            const Tensor<U>& other, 
-            std::function<void(std::common_type_t<T, U>&, const T&, const U&)> func
+        Tensor<std::common_type_t<T, U>> simd_with_tensor(
+            const Tensor<U>& other,
+            std::function<void(std::common_type_t<T, U>&, const T&, const U&)> callback
+        ) const;
+        
+        template <Numeric U>
+        Tensor<std::common_type_t<T, U>> simd_with_scalar(
+            const U& scalar,
+            std::function<void(std::common_type_t<T, U>&, const T&, const U&)> callback
         ) const;
 
         template <Numeric U>
-        Tensor<std::common_type_t<T, U>> create_with_scalar(
+        Tensor<T>& change_tensor_simd(
+            const Tensor<U>& other, 
+            std::function<void(T&, const U&)> callback
+        );
+
+        template <Numeric U>
+        Tensor<T>& change_tensor_scalar_simd(
             const U& scalar, 
-            std::function<void(std::common_type_t<T, U>&, const T&, const U&)> func
-        ) const;
+            std::function<void(T&, const U&)> callback
+        );
 
     public:
         // Constructors
@@ -60,43 +75,55 @@ template <Numeric T> class Tensor: public Shapeable {
         template <Numeric U>
         Tensor<T>& operator=(const Tensor<U>& other);
 
-        // Operators
-
-        template <Numeric U>
-        Tensor<std::common_type_t<T, U>> operator+(const Tensor<U>& other) const;
-
-        template <Numeric U>
-        Tensor<std::common_type_t<T, U>> operator+(const U& scalar) const;
-
-        template <Numeric U>
-        Tensor<std::common_type_t<T, U>> operator-(const Tensor<U>& other) const;
-
-        template <Numeric U>
-        Tensor<std::common_type_t<T, U>> operator-(const U& scalar) const;
-
-        template <Numeric U>
-        Tensor<std::common_type_t<T, U>> operator*(const Tensor<U>& other) const;
-
-        template <Numeric U>
-        Tensor<std::common_type_t<T, U>> operator*(const U& scalar) const;
-
-        template <Numeric U>
-        Tensor<std::common_type_t<T, U>> operator/(const Tensor<U>& other) const;
-
-        template <Numeric U>
-        Tensor<std::common_type_t<T, U>> operator/(const U& scalar) const;
-
         template <Numeric U>
         Tensor<T>& operator+=(const Tensor<U>& other);
-
-        template <Numeric U>
-        Tensor<T>& operator+=(const U& scalar);
-
+        
         template <Numeric U>
         Tensor<T>& operator-=(const Tensor<U>& other);
 
         template <Numeric U>
+        Tensor<T>& operator*=(const Tensor<U>& other);
+
+        template <Numeric U>
+        Tensor<T>& operator/=(const Tensor<U>& other);
+        
+        template <Numeric U>
+        Tensor<T>& operator+=(const U& scalar);
+        
+        template <Numeric U>
         Tensor<T>& operator-=(const U& scalar);
+
+        template <Numeric U>
+        Tensor<T>& operator*=(const U& scalar);
+
+        template <Numeric U>
+        Tensor<T>& operator/=(const U& scalar);
+
+        // Arithmetic operators
+
+        template <Numeric U>
+        Tensor<std::common_type_t<T, U>> operator+(const Tensor<U>& other) const;
+        
+        template <Numeric U>
+        Tensor<std::common_type_t<T, U>> operator-(const Tensor<U>& other) const;
+        
+        template <Numeric U>
+        Tensor<std::common_type_t<T, U>> operator*(const Tensor<U>& other) const;
+        
+        template <Numeric U>
+        Tensor<std::common_type_t<T, U>> operator/(const Tensor<U>& other) const;
+        
+        template <Numeric U>
+        Tensor<std::common_type_t<T, U>> operator+(const U& scalar) const;
+        
+        template <Numeric U>
+        Tensor<std::common_type_t<T, U>> operator-(const U& scalar) const;
+        
+        template <Numeric U>
+        Tensor<std::common_type_t<T, U>> operator*(const U& scalar) const;
+        
+        template <Numeric U>
+        Tensor<std::common_type_t<T, U>> operator/(const U& scalar) const;
 
         // Accessors
 
@@ -185,5 +212,6 @@ template <Numeric T> class Tensor: public Shapeable {
 };
 
 #include "../src/tensor.tpp"
+#include "../src/tensor_operators.tpp"
 
 #endif 

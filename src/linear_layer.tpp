@@ -42,7 +42,7 @@ LinearLayer<T>::LinearLayer(int in_features, int out_features, float lr)
         weights[i] = dist(gen);
     }
 
-    bias = tensor::ones<T>(out_features);
+    bias = tensor::ones<T>(1, out_features);
 }
 
 template <Numeric T>
@@ -52,36 +52,17 @@ Tensor<T> LinearLayer<T>::forward(const Tensor<T>& input) {
     }
     
     this->last_input = input;
-    
-    // Get the dot product result
-    Tensor<T> dot_result = input.dot(weights);
-    
-    // Create a broadcasting-compatible version of bias
-    // The bias should be added to each row of the dot result
-    Tensor<T> broadcast_bias(dot_result.shape());
-    
-    // Copy the bias values to each row of the result
-    for(int i = 0; i < dot_result.shape(0); ++i) {
-        for(int j = 0; j < dot_result.shape(1); ++j) {
-            broadcast_bias(i, j) = bias[j];
-        }
-    }
-    
-    // Now add with matching shapes
-    this->last_output = relu(dot_result + broadcast_bias);
+    Tensor<T> dot_result = input.dot(weights) + bias;
+    this->last_output = relu(dot_result);
     
     return this->last_output;
 }
 
 template <Numeric T>
 Tensor<T> LinearLayer<T>::backward(const Tensor<T>& grad_weights) {
-    // if (grad_weights.shape(0) != out_features || grad_weights.shape(1) != in_features) {
-    //     throw std::invalid_argument("Gradient shape doesn't match layer's weights shape");
-    // }
-    
     Tensor<T> delta = grad_weights * relu_derivative(last_output);
     Tensor<T> previous_grad = delta.dot(weights.transpose());
-
+    
     weights -= (last_input.transpose().dot(delta) * learning_rate);
     bias -= (delta.sum(0, true) * learning_rate);
 

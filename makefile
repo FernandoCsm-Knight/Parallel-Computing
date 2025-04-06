@@ -84,10 +84,21 @@ run: build
 clean:
 	rm -rf $(LIB_DIR)
 
+time: build 
+	@if [ $(MPI) -eq 0 ]; then \
+		time -v $(BIN_FILE); \
+	else \
+		time -v mpirun -np $(MPI) $(BIN_FILE); \
+	fi
+
 rerun: clean build run
 
 valgrind: build
-	valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes $(BIN_FILE)
+	@if [ $(MPI) -eq 0 ]; then \
+		valgrind --leak-check=full --track-origins=yes $(BIN_FILE); \
+	else \
+		mpirun -np $(MPI) valgrind --leak-check=full --track-origins=yes $(BIN_FILE); \
+	fi
 
 # ============================================================
 # 8. Phony Targets
