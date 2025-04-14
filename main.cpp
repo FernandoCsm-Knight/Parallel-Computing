@@ -6,6 +6,7 @@
 #include <random>
 #include <vector>
 #include <cmath>
+#include <omp.h>
 
 // Generate n non-linearly separable data points with num_classes classes
 // Returns a pair of tensors (x, y) where:
@@ -29,6 +30,7 @@ std::pair<Tensor<T>, Tensor<T>> generate_nonlinear_data(int n, int num_classes) 
     T radius_step = 1.0 / num_classes;
     
     // Assign base radius for each class (concentric circles pattern)
+    #pragma omp target map(tofrom: class_radii[0:num_classes]) map(to: radius_step) parallel for simd
     for (int c = 0; c < num_classes; ++c) {
         class_radii[c] = (c + 1) * radius_step;
     }
