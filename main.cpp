@@ -39,6 +39,8 @@ std::pair<Tensor<T>, Tensor<T>> generate_nonlinear_data(int n, int num_classes) 
     // Generate data points
     #pragma omp parallel for simd
     for (int i = 0; i < n; ++i) {
+
+        printf("THREADS: %d", omp_get_num_threads());
         // Determine class for this point
         int class_id = i % num_classes;
         
@@ -70,7 +72,7 @@ int main() {
     const int EPOCHS = 1000;
     const int BATCH_SIZE = 32;
     
-    omp_set_num_threads(2);
+    omp_set_num_threads(4);
 
     // Gerar dados
     auto [features, labels] = generate_nonlinear_data<float>(NUM_SAMPLES, NUM_CLASSES);
@@ -85,7 +87,6 @@ int main() {
     Tensor<float> y_test(test_size, NUM_CLASSES);
     
     // Copiar dados para conjuntos de treinamento e teste
-    #pragma omp parallel for collapse(2)
     for (int i = 0; i < train_size; ++i) {
         for (int j = 0; j < NUM_FEATURES; ++j) {
             X_train(i, j) = features(i, j).value();
@@ -95,7 +96,6 @@ int main() {
         }
     }
     
-    #pragma omp parallel for collapse(2)
     for (int i = 0; i < test_size; ++i) {
         for (int j = 0; j < NUM_FEATURES; ++j) {
             X_test(i, j) = features(train_size + i, j).value();
@@ -103,7 +103,6 @@ int main() {
         for (int j = 0; j < NUM_CLASSES; ++j) {
             y_test(i, j) = labels(train_size + i, j).value();
         }
-        printf("THREADS: %d", omp_get_num_threads());
     }
     
     // Criar e treinar o modelo
