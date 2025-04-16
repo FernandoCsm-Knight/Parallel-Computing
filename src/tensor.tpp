@@ -41,6 +41,7 @@ Tensor<T>::Tensor(const Tensor<T>& other): Shapeable(other) {
         stride[i] = other.stride[i];
     }
 
+    #pragma omp parallel for
     for(size_t i = 0; i < this->length(); ++i) {
         data[i] = other.data[i];
     }
@@ -64,6 +65,7 @@ Tensor<T>::Tensor(const Tensor<U>& other): Shapeable(other) {
         stride[i] = other.stride[i];
     }
 
+    #pragma omp parallel for
     for(size_t i = 0; i < this->length(); ++i) {
         data[i] = static_cast<T>(other.data[i]);
     }
@@ -188,6 +190,8 @@ const T& Tensor<T>::value() const {
 template <Numeric T>
 T Tensor<T>::min() const {
     T min_element = this->data[0];
+
+    #pragma omp parallel for
     for(size_t i = 1; i < this->length(); ++i) {
         min_element = std::min(min_element, this->data[i]);
     }
@@ -198,6 +202,8 @@ T Tensor<T>::min() const {
 template <Numeric T>
 T Tensor<T>::max() const {
     T max_element = this->data[0];
+    
+    #pragma omp parallel for
     for(size_t i = 1; i < this->length(); ++i) {
         max_element = std::max(max_element, this->data[i]);
     }
@@ -219,6 +225,7 @@ Tensor<T> Tensor<T>::sum(int axis, bool keep_dimension) const {
             result = Tensor<T>(result_shape);
             T total = 0;
             
+            #pragma omp parallel for
             for (size_t i = 0; i < this->length(); ++i) {
                 total += this->data[i];
             }
@@ -228,6 +235,7 @@ Tensor<T> Tensor<T>::sum(int axis, bool keep_dimension) const {
             result = Tensor<T>(Shape());
             T total = 0;
             
+            #pragma omp parallel for
             for (size_t i = 0; i < this->length(); ++i) {
                 total += this->data[i];
             }
@@ -261,10 +269,12 @@ Tensor<T> Tensor<T>::sum(int axis, bool keep_dimension) const {
             outer_block_size *= this->shape()[i];
         }
         
+        #pragma omp parallel for
         for (size_t i = 0; i < result.length(); ++i) {
             result[i] = 0;
         }
         
+        #pragma omp parallel for collapse(2)
         for (int outer = 0; outer < outer_block_size; ++outer) {
             for (int inner = 0; inner < axis_stride; ++inner) {
                 size_t result_idx = (keep_dimension) ?
@@ -291,6 +301,8 @@ template <Numeric T>
 T Tensor<T>::var() const {
     T mean_value = mean();
     T sum = 0;
+
+    #pragma omp parallel for
     for(size_t i = 0; i < this->length(); ++i) {
         sum += (this->data[i] - mean_value) * (this->data[i] - mean_value);
     }
@@ -306,6 +318,8 @@ T Tensor<T>::std() const {
 template <Numeric T>
 Tensor<T> Tensor<T>::abs() const {
     Tensor<T> result(this->shape());
+
+    #pragma omp parallel for
     for(size_t i = 0; i < this->length(); ++i) {
         result.data[i] = std::abs(this->data[i]);
     }
@@ -366,6 +380,8 @@ Tensor<T> Tensor<T>::transpose() const {
     }
 
     Tensor<T> result(this->shape(1), this->shape(0));
+
+    #pragma omp parallel for collapse(2)
     for(int i = 0; i < this->shape(0); ++i) {
         for(int j = 0; j < this->shape(1); ++j) {
             result.data[j * result.stride[0] + i] = this->data[i * this->stride[0] + j];
@@ -382,6 +398,8 @@ Tensor<T> Tensor<T>::reshape(Shape new_shape) const {
     }
 
     Tensor<T> result(new_shape);
+
+    #pragma omp parallel for
     for(size_t i = 0; i < this->length(); ++i) {
         result.data[i] = this->data[i];
     }
@@ -436,6 +454,7 @@ Iterator<const T> Tensor<T>::end() const {
 template <Numeric T>
 void Tensor<T>::clear() {
     if(this->data != nullptr) {
+        #pragma omp parallel for
         for(size_t i = 0; i < this->length(); ++i) 
             this->data[i] = T();
     }
