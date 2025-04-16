@@ -1,19 +1,16 @@
 # ============================================================
 # 1. Configuration Section
 # ============================================================
-# If MPI=1, use mpic++ (OpenMPI’s C++ compiler wrapper).
-# Otherwise, default to g++.
 MPI ?= 0
 
-ifeq ($(shell test $(MPI) -gt 0 && echo true), true)
+ifeq ($(MPI),1)
     CXX = mpic++
-    # Adicione quaisquer flags específicas do MPI, se necessário.
     CXXFLAGS = -fopenmp -std=c++23 -Wall -Iinclude
     $(info Building with MPI (mpic++), using OpenMP)
 else
-    CXX = g++
+    CXX = clang++
     CXXFLAGS = -fopenmp -std=c++23 -Wall -Iinclude
-    $(info Building with g++ (no MPI), using OpenMP)
+    $(info Building with clang++ (no MPI), using OpenMP)
 endif
 
 # ============================================================
@@ -28,17 +25,8 @@ INCLUDE_DIR  = inc
 # ============================================================
 # 3. Source and Object Files
 # ============================================================
-# Find all .cpp files in the current directory and in src/**
-SRC_FILES    := $(wildcard ./*.cpp) $(wildcard $(SRC_DIR)/**/*.cpp)
-
-# Convert the .cpp paths to .o paths under OBJ_DIR
-OBJ_FILES    := $(patsubst ./%.cpp,      $(OBJ_DIR)/%.o, \
-                 $(patsubst $(SRC_DIR)/%.cpp, $(OBJ_DIR)/%.o, $(SRC_FILES)))
-
-# Unique directories for object files (in case of subfolders)
-OBJ_DIRS     := $(sort $(dir $(OBJ_FILES)))
-
-# Output binary
+SRC_FILES    := $(shell find $(SRC_DIR) -name '*.cpp') $(wildcard ./*.cpp)
+OBJ_FILES    := $(patsubst %.cpp, $(OBJ_DIR)/%.o, $(notdir $(SRC_FILES)))
 BIN_FILE     = $(BIN_DIR)/program
 
 # ============================================================
@@ -51,56 +39,52 @@ all: build
 # ============================================================
 build: $(BIN_FILE)
 
-# Compile the final executable
 $(BIN_FILE): $(OBJ_FILES) | $(BIN_DIR)
-	$(CXX) $(CXXFLAGS) -o $@ $^
+	$(CXX) $(CXXFLAGS) -o $@ $(addprefix $(OBJ_DIR)/, $(notdir $(SRC_FILES:.cpp=.o)))
 
-# Compile .cpp to .o (keeping directory structure)
-$(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp | $(OBJ_DIRS)
+$(OBJ_DIR)/%.o: %.cpp | $(OBJ_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-$(OBJ_DIR)/%.o: %.cpp | $(OBJ_DIRS)
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp | $(OBJ_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 # ============================================================
 # 6. Directory Creation
 # ============================================================
-$(BIN_DIR) $(OBJ_DIR):
-	@mkdir -p $@
+$(BIN_DIR):
+	mkdir -p $(BIN_DIR)
 
-$(OBJ_DIRS):
-	@mkdir -p $@
+$(OBJ_DIR):
+	mkdir -p $(OBJ_DIR)
 
 # ============================================================
 # 7. Run, Clean, Rerun
 # ============================================================
 run: build
-	@if [ $(MPI) -eq 0 ]; then \
-		$(BIN_FILE); \
-	else \
-		mpirun -np $(MPI) $(BIN_FILE); \
-	fi
+ifeq ($(MPI),0)
+	./$(BIN_FILE)
+else
+	mpirun -np $(MPI) ./$(BIN_FILE)
+endif
 
 clean:
-	rm -rf $(LIB_DIR)
+	@if [ -d "$(LIB_DIR)" ]; then rm -rf $(LIB_DIR); fi
 
-time: build 
-	@if [ $(MPI) -eq 0 ]; then \
-		time -v $(BIN_FILE); \
-	else \
-		time -v mpirun -np $(MPI) $(BIN_FILE); \
-	fi
+time: build
+ifeq ($(MPI),0)
+	@echo Timing...
+	@/usr/bin/time -v ./$(BIN_FILE)
+else
+	@echo Timing...
+	@/usr/bin/time -v mpirun -np $(MPI) ./$(BIN_FILE)
+endif
 
 rerun: clean build run
 
-valgrind: build
-	@if [ $(MPI) -eq 0 ]; then \
-		valgrind --leak-check=full --track-origins=yes $(BIN_FILE); \
-	else \
-		mpirun -np $(MPI) valgrind --leak-check=full --track-origins=yes $(BIN_FILE); \
-	fi
+valgrind:
+	@echo "Valgrind não disponível nativamente no Windows. Use WSL."
 
 # ============================================================
 # 8. Phony Targets
 # ============================================================
-.PHONY: all build run clean rerun
+.PHONY: all build run clean rerun valgrind time

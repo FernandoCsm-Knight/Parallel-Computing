@@ -2,6 +2,7 @@
 #define NEURAL_NETWORK_HPP
 
 #include <random>
+#include <algorithm>
 #include <utility>
 #include <vector>
 #include <cmath>

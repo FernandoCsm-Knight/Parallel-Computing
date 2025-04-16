@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include <random>
+#include <algorithm>
 #include <vector>
 #include <cmath>
 #include <omp.h>
@@ -30,12 +31,13 @@ std::pair<Tensor<T>, Tensor<T>> generate_nonlinear_data(int n, int num_classes) 
     T radius_step = 1.0 / num_classes;
     
     // Assign base radius for each class (concentric circles pattern)
-    #pragma omp target map(tofrom: class_radii[0:num_classes]) map(to: radius_step) parallel for simd
+
     for (int c = 0; c < num_classes; ++c) {
         class_radii[c] = (c + 1) * radius_step;
     }
     
     // Generate data points
+    #pragma omp parallel for simd
     for (int i = 0; i < n; ++i) {
         // Determine class for this point
         int class_id = i % num_classes;
@@ -62,12 +64,14 @@ std::pair<Tensor<T>, Tensor<T>> generate_nonlinear_data(int n, int num_classes) 
 int main() {
     // Configurações
     const int NUM_SAMPLES = 1000;
-    const int NUM_CLASSES = 3;
+    const int NUM_CLASSES = 2;
     const int NUM_FEATURES = 2;
     const float LEARNING_RATE = 0.01f;
-    const int EPOCHS = 20;
+    const int EPOCHS = 1000;
     const int BATCH_SIZE = 32;
     
+    omp_set_num_threads(2);
+
     // Gerar dados
     auto [features, labels] = generate_nonlinear_data<float>(NUM_SAMPLES, NUM_CLASSES);
     
@@ -81,6 +85,7 @@ int main() {
     Tensor<float> y_test(test_size, NUM_CLASSES);
     
     // Copiar dados para conjuntos de treinamento e teste
+    #pragma omp parallel for collapse(2)
     for (int i = 0; i < train_size; ++i) {
         for (int j = 0; j < NUM_FEATURES; ++j) {
             X_train(i, j) = features(i, j).value();
@@ -90,6 +95,7 @@ int main() {
         }
     }
     
+    #pragma omp parallel for collapse(2)
     for (int i = 0; i < test_size; ++i) {
         for (int j = 0; j < NUM_FEATURES; ++j) {
             X_test(i, j) = features(train_size + i, j).value();
@@ -97,6 +103,7 @@ int main() {
         for (int j = 0; j < NUM_CLASSES; ++j) {
             y_test(i, j) = labels(train_size + i, j).value();
         }
+        printf("THREADS: %d", omp_get_num_threads());
     }
     
     // Criar e treinar o modelo

@@ -32,14 +32,17 @@ Tensor<std::common_type_t<T, U>> Tensor<T>::simd_with_tensor(
     Tensor<std::common_type_t<T, U>> result(this->shape());
 
     if(this->shape() == other.shape()) {
+        #pragma omp parallel for
         for(size_t i = 0; i < length(); ++i) {
             callback(result[i], data[i], other.data[i]);
         }
     } else if(other.is_scalar()) {
+        #pragma omp parallel for
         for(size_t i = 0; i < length(); ++i) {
             callback(result[i], data[i], other.value());
         }
     } else if(this->is_scalar()) {
+        #pragma omp parallel for
         for(size_t i = 0; i < other.length(); ++i) {
             callback(result[i], this->value(), other.data[i]);
         }
@@ -63,6 +66,7 @@ Tensor<std::common_type_t<T, U>> Tensor<T>::simd_with_tensor(
             other_strides[i] = other_strides[i + 1] * other_shape[i + 1];
         }
         
+        #pragma omp parallel for
         for(size_t i = 0; i < this->length(); ++i) {
             size_t other_idx = get_broadcast_index(i, other_shape, other_strides);
             callback(result[i], data[i], other.data[other_idx]);
@@ -79,6 +83,8 @@ Tensor<std::common_type_t<T, U>> Tensor<T>::simd_with_scalar(
     std::function<void(std::common_type_t<T, U>&, const T&, const U&)> callback
 ) const {
     Tensor<std::common_type_t<T, U>> result(this->shape());
+
+    #pragma omp parallel for
     for(size_t i = 0; i < length(); ++i) {
         callback(result[i], data[i], scalar);
     }
@@ -93,10 +99,12 @@ Tensor<T>& Tensor<T>::change_tensor_simd(
     std::function<void(T&, const U&)> callback
 ) {
     if(this->shape() == other.shape()) {
+        #pragma omp parallel for
         for(size_t i = 0; i < length(); ++i) {
             callback(data[i], other.data[i]);
         }
     } else if(other.is_scalar()) {
+        #pragma omp parallel for
         for(size_t i = 0; i < length(); ++i) {
             callback(data[i], other.value());
         }
@@ -120,6 +128,7 @@ Tensor<T>& Tensor<T>::change_tensor_simd(
             other_strides[i] = other_strides[i + 1] * other_shape[i + 1];
         }
         
+        #pragma omp parallel for
         for(size_t i = 0; i < this->length(); ++i) {
             size_t other_idx = get_broadcast_index(i, other_shape, other_strides);
             callback(data[i], other.data[other_idx]);
@@ -135,6 +144,7 @@ Tensor<T>& Tensor<T>::change_tensor_scalar_simd(
     const U& scalar, 
     std::function<void(T&, const U&)> callback
 ) {
+    #pragma omp parallel for
     for(size_t i = 0; i < length(); ++i) {
         callback(data[i], scalar);
     }
@@ -157,7 +167,8 @@ Tensor<T>& Tensor<T>::operator=(const Tensor<T>& other) {
         for(int i = 0; i < this->ndim(); ++i){
             stride[i] = other.stride[i];
         }
-
+        
+        #pragma omp parallel for
         for(size_t i = 0; i < this->length(); ++i) {
             this->data[i] = other.data[i];
         }
@@ -198,6 +209,7 @@ Tensor<T>& Tensor<T>::operator=(const Tensor<U>& other) {
             stride[i] = other.stride[i];
         }
 
+        #pragma omp parallel for
         for(size_t i = 0; i < this->length(); ++i) {
             this->data[i] = static_cast<T>(other.data[i]);
         }
