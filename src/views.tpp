@@ -17,6 +17,7 @@ void TensorView<T>::fill(const T& value) {
             indices[i] = 0;
         }
     
+        #pragma omp parallel for
         for(size_t i = 0; i < total_elements; ++i) {
             size_t flat_idx = 0;
             for(int d = 0; d < this->ndim(); ++d) {

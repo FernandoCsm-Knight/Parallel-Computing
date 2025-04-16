@@ -10,6 +10,7 @@ template <Numeric T>
 Tensor<T> relu(const Tensor<T>& input) {
     Tensor<T> result(input.shape());
 
+    #pragma omp parallel for
     for(size_t i = 0; i < input.length(); ++i) {
         result[i] = std::max(static_cast<T>(0), input[i]);
     }
@@ -21,6 +22,7 @@ template <Numeric T>
 Tensor<T> relu_derivative(const Tensor<T>& input) {
     Tensor<T> result(input.shape());
 
+    #pragma omp parallel for
     for(size_t i = 0; i < input.length(); ++i) {
         result[i] = (input[i] > static_cast<T>(0)) ? static_cast<T>(1) : static_cast<T>(0);
     }
@@ -38,6 +40,7 @@ LinearLayer<T>::LinearLayer(int in_features, int out_features, float lr)
     
     weights = Tensor<T>(in_features, out_features);
     
+    #pragma omp parallel for
     for (size_t i = 0; i < weights.length(); ++i) {
         weights[i] = dist(gen);
     }

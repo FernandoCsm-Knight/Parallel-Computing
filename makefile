@@ -8,7 +8,7 @@ ifeq ($(MPI),1)
     CXXFLAGS = -fopenmp -std=c++23 -Wall -Iinclude
     $(info Building with MPI (mpic++), using OpenMP)
 else
-    CXX = clang++
+    CXX = g++
     CXXFLAGS = -fopenmp -std=c++23 -Wall -Iinclude
     $(info Building with clang++ (no MPI), using OpenMP)
 endif
@@ -70,13 +70,13 @@ endif
 clean:
 	@if [ -d "$(LIB_DIR)" ]; then rm -rf $(LIB_DIR); fi
 
-time: build
+time: clean build
 ifeq ($(MPI),0)
 	@echo Timing...
-	@/usr/bin/time -v ./$(BIN_FILE)
+	/usr/bin/time ./$(BIN_FILE)
 else
 	@echo Timing...
-	@/usr/bin/time -v mpirun -np $(MPI) ./$(BIN_FILE)
+	/usr/bin/time  mpirun -np $(MPI) ./$(BIN_FILE)
 endif
 
 rerun: clean build run
