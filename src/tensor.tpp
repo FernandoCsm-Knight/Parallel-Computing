@@ -347,6 +347,7 @@ Tensor<std::common_type_t<T, U>> Tensor<T>::dot(const Tensor<U>& other) const {
     using R = std::common_type_t<T, U>;
     
     Tensor<R> result((m == 1) ? Shape(p) : (p == 1) ? Shape(m) : Shape(m, p));
+    #pragma omp parallel for collapse(2)
     for (int i = 0; i < m; ++i) {
         for (int j = 0; j < p; ++j) {
             R sum = 0;

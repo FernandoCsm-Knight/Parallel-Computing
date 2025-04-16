@@ -72,7 +72,7 @@ int main() {
   const int EPOCHS = 1000;
   const int BATCH_SIZE = 32;
 
-  omp_set_num_threads(4);
+  omp_set_num_threads(8);
 
   // Gerar dados
   auto [features, labels] =
@@ -88,7 +88,6 @@ int main() {
   Tensor<float> y_test(test_size, NUM_CLASSES);
 
   // Copiar dados para conjuntos de treinamento e teste
-  // #pragma omp parallel for collapse(2)
   for (int i = 0; i < train_size; ++i) {
     for (int j = 0; j < NUM_FEATURES; ++j) {
       X_train(i, j) = features(i, j).value();

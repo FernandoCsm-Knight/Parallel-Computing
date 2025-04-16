@@ -9,7 +9,6 @@ template <Numeric T>
 Tensor<T> NeuralNetwork<T>::softmax(const Tensor<T>& input) const {
     Tensor<T> result(input.shape());
     
-    #pragma omp parallel for
     for (int i = 0; i < input.shape(0); ++i) {
         T max_val = input(i, 0).value();
         for (int j = 1; j < input.shape(1); ++j) {
@@ -36,7 +35,6 @@ T NeuralNetwork<T>::cross_entropy_loss(const Tensor<T>& predictions, const Tenso
     T loss = 0;
     int batch_size = predictions.shape(0);
     
-    #pragma omp parallel for collapse(2)
     for (int i = 0; i < batch_size; ++i) {
         for (int j = 0; j < predictions.shape(1); ++j) {
             if (targets(i, j).value() > 0) {
@@ -54,7 +52,6 @@ Tensor<T> NeuralNetwork<T>::softmax_cross_entropy_grad(const Tensor<T>& predicti
     Tensor<T> grad(predictions.shape());
     int batch_size = predictions.shape(0);
     
-    #pragma omp parallel for collapse(2)
     for (int i = 0; i < batch_size; ++i) {
         for (int j = 0; j < predictions.shape(1); ++j) {
             grad(i, j) = (predictions(i, j).value() - targets(i, j).value()) / batch_size;
@@ -148,7 +145,6 @@ T NeuralNetwork<T>::evaluate(const Tensor<T>& X, const Tensor<T>& y) {
     int correct = 0;
     int total = X.shape(0);
     
-    #pragma omp parallel for
     for (int i = 0; i < total; ++i) {
         int pred_class = 0;
         T max_prob = predictions(i, 0).value();
