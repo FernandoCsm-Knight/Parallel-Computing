@@ -191,7 +191,7 @@ template <Numeric T>
 T Tensor<T>::min() const {
     T min_element = this->data[0];
 
-    #pragma omp parallel for
+    #pragma omp parallel for reduction(min:min_element)
     for(size_t i = 1; i < this->length(); ++i) {
         min_element = std::min(min_element, this->data[i]);
     }
@@ -203,7 +203,7 @@ template <Numeric T>
 T Tensor<T>::max() const {
     T max_element = this->data[0];
     
-    #pragma omp parallel for
+    #pragma omp parallel for reduction(max:max_element)
     for(size_t i = 1; i < this->length(); ++i) {
         max_element = std::max(max_element, this->data[i]);
     }
@@ -225,7 +225,7 @@ Tensor<T> Tensor<T>::sum(int axis, bool keep_dimension) const {
             result = Tensor<T>(result_shape);
             T total = 0;
             
-            #pragma omp parallel for
+            #pragma omp parallel for  reduction(+:total)
             for (size_t i = 0; i < this->length(); ++i) {
                 total += this->data[i];
             }
@@ -235,7 +235,7 @@ Tensor<T> Tensor<T>::sum(int axis, bool keep_dimension) const {
             result = Tensor<T>(Shape());
             T total = 0;
             
-            #pragma omp parallel for
+            #pragma omp parallel for  reduction(+:total)
             for (size_t i = 0; i < this->length(); ++i) {
                 total += this->data[i];
             }
@@ -302,7 +302,7 @@ T Tensor<T>::var() const {
     T mean_value = mean();
     T sum = 0;
 
-    #pragma omp parallel for
+    #pragma omp parallel for reduction(+:sum)
     for(size_t i = 0; i < this->length(); ++i) {
         sum += (this->data[i] - mean_value) * (this->data[i] - mean_value);
     }

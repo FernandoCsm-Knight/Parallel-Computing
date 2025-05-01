@@ -22,10 +22,6 @@ std::pair<Tensor<T>, Tensor<T>> generate_nonlinear_data(int n,
 
   // Initialize random number generators
   std::random_device rd;
-  std::mt19937 gen(rd());
-  std::uniform_real_distribution<T> radius_dist(0.0, 1.0);
-  std::uniform_real_distribution<T> angle_dist(0.0, 2 * M_PI);
-  std::uniform_real_distribution<T> noise_dist(-0.1, 0.1);
 
   // Parameters for creating non-linear separation between classes
   std::vector<T> class_radii(num_classes);
@@ -38,30 +34,28 @@ std::pair<Tensor<T>, Tensor<T>> generate_nonlinear_data(int n,
   }
 
 // Generate data points
-#pragma omp parallel for simd
-  for (int i = 0; i < n; ++i) {
+#pragma omp parallel for
+for (int i = 0; i < n; ++i) {
+    std::mt19937 local_gen(rd() + i);
 
-    // Determine class for this point
+    std::uniform_real_distribution<T> radius_dist(0.0, 1.0);
+    std::uniform_real_distribution<T> angle_dist(0.0, 2 * M_PI);
+    std::uniform_real_distribution<T> noise_dist(-0.1, 0.1);
+
     int class_id = i % num_classes;
-
-    // Generate a point using polar coordinates
     T base_radius = class_radii[class_id];
-    // Add some variation to radius
-    T radius = base_radius + radius_dist(gen) * radius_step * 0.5;
-    T angle = angle_dist(gen);
 
-    // Convert to cartesian coordinates with some noise
-    x(i, 0) = radius * std::cos(angle) + noise_dist(gen);
-    x(i, 1) = radius * std::sin(angle) + noise_dist(gen);
+    T radius = base_radius + radius_dist(local_gen) * radius_step * 0.5;
+    T angle = angle_dist(local_gen);
 
-    // Set one-hot encoded label
+    x(i, 0) = radius * std::cos(angle) + noise_dist(local_gen);
+    x(i, 1) = radius * std::sin(angle) + noise_dist(local_gen);
+
     for (int c = 0; c < num_classes; ++c) {
-      y(i, c) = (c == class_id) ? 1 : 0;
+        y(i, c) = (c == class_id) ? 1 : 0;
     }
-  }
-
-  return std::make_pair(x, y);
 }
+
 
 int main() {
   // Configurações
