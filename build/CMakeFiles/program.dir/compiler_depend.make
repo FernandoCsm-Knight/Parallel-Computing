@@ -821,8 +821,11 @@ CMakeFiles/program.dir/main.cpp.obj: C:/Users/YURI/OneDrive/Desktop/Parallel-Com
   C:/Users/YURI/.utils/llvm-mingw/lib/clang/20/include/stddef.h \
   C:/Users/YURI/.utils/llvm-mingw/lib/clang/20/include/stdint.h \
   C:/Users/YURI/.utils/llvm-mingw/lib/clang/20/include/vadefs.h \
+  C:/Users/YURI/OneDrive/Desktop/Parallel-Computing/inc/tensorlib.hpp \
+  C:/Users/YURI/OneDrive/Desktop/Parallel-Computing/src/tensorlib.tpp \
   C:/Users/YURI/OneDrive/Desktop/Parallel-Computing/inc/linear_layer.hpp \
   C:/Users/YURI/OneDrive/Desktop/Parallel-Computing/inc/neural_network.hpp \
+  C:/Users/YURI/OneDrive/Desktop/Parallel-Computing/inc/numeric.hpp \
   C:/Users/YURI/OneDrive/Desktop/Parallel-Computing/inc/shape.hpp \
   C:/Users/YURI/OneDrive/Desktop/Parallel-Computing/inc/shapeable.hpp \
   C:/Users/YURI/OneDrive/Desktop/Parallel-Computing/inc/tensor.hpp \
@@ -834,7 +837,6 @@ CMakeFiles/program.dir/main.cpp.obj: C:/Users/YURI/OneDrive/Desktop/Parallel-Com
   C:/Users/YURI/OneDrive/Desktop/Parallel-Computing/src/shapeable.tpp \
   C:/Users/YURI/OneDrive/Desktop/Parallel-Computing/src/tensor.tpp \
   C:/Users/YURI/OneDrive/Desktop/Parallel-Computing/src/tensor_operators.tpp \
-  C:/Users/YURI/OneDrive/Desktop/Parallel-Computing/src/tensorlib.tpp \
   C:/Users/YURI/OneDrive/Desktop/Parallel-Computing/src/views.tpp \
   C:/Users/YURI/OneDrive/Desktop/Parallel-Computing/inc/linear_layer.hpp \
   C:/Users/YURI/OneDrive/Desktop/Parallel-Computing/inc/neural_network.hpp \
@@ -2508,12 +2510,12 @@ C:/Users/YURI/.utils/llvm-mingw/lib/clang/20/include/stddef.h:
 
 C:/Users/YURI/OneDrive/Desktop/Parallel-Computing/inc/tensorlib.hpp:
 
+C:/Users/YURI/OneDrive/Desktop/Parallel-Computing/src/tensorlib.tpp:
+
+C:/Users/YURI/OneDrive/Desktop/Parallel-Computing/inc/numeric.hpp:
+
 C:/Users/YURI/OneDrive/Desktop/Parallel-Computing/inc/views.hpp:
 
 C:/Users/YURI/OneDrive/Desktop/Parallel-Computing/src/shapeable.tpp:
 
 C:/Users/YURI/OneDrive/Desktop/Parallel-Computing/src/tensor_operators.tpp:
-
-C:/Users/YURI/OneDrive/Desktop/Parallel-Computing/src/tensorlib.tpp:
-
-C:/Users/YURI/OneDrive/Desktop/Parallel-Computing/inc/numeric.hpp:

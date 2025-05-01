@@ -14,8 +14,7 @@
 // - x is the feature tensor with shape (n, 2) containing 2D points
 // - y is the one-hot encoded labels with shape (n, num_classes)
 template <Numeric T>
-std::pair<Tensor<T>, Tensor<T>> generate_nonlinear_data(int n,
-                                                        int num_classes) {
+std::pair<Tensor<T>, Tensor<T>> generate_nonlinear_data(int n, int num_classes) {
   // Create tensors for data and labels
   Tensor<T> x(n, 2);           // n samples with 2 features (x, y coordinates)
   Tensor<T> y(n, num_classes); // One-hot encoded labels
@@ -55,7 +54,8 @@ for (int i = 0; i < n; ++i) {
         y(i, c) = (c == class_id) ? 1 : 0;
     }
 }
-
+  return std::make_pair(x, y);
+}
 
 int main() {
   // Configurações
