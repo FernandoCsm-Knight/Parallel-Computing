@@ -1,3 +1,0 @@
-C:/Users/YURI/OneDrive/Desktop/Parallel-Computing/build/CMakeFiles/program.dir
-C:/Users/YURI/OneDrive/Desktop/Parallel-Computing/build/CMakeFiles/edit_cache.dir
-C:/Users/YURI/OneDrive/Desktop/Parallel-Computing/build/CMakeFiles/rebuild_cache.dir

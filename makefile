@@ -3,14 +3,14 @@
 # ============================================================
 MPI ?= 0
 
-ifeq ($(MPI),1)
+ifeq ($(MPI),0)
+    CXX = g++
+    CXXFLAGS = -fopenmp -std=c++23 -Wall -Iinclude
+    $(info Building with g++ (no MPI), using OpenMP)
+else
     CXX = mpic++
     CXXFLAGS = -fopenmp -std=c++23 -Wall -Iinclude
     $(info Building with MPI (mpic++), using OpenMP)
-else
-    CXX = g++
-    CXXFLAGS = -fopenmp -std=c++23 -Wall -Iinclude
-    $(info Building with clang++ (no MPI), using OpenMP)
 endif
 
 # ============================================================
@@ -73,10 +73,10 @@ clean:
 time: clean build
 ifeq ($(MPI),0)
 	@echo Timing...
-	/usr/bin/time ./$(BIN_FILE)
+	/usr/bin/time -f %E ./$(BIN_FILE)
 else
 	@echo Timing...
-	/usr/bin/time  mpirun -np $(MPI) ./$(BIN_FILE)
+	/usr/bin/time -f %E mpirun -np $(MPI) ./$(BIN_FILE)
 endif
 
 rerun: clean build run
